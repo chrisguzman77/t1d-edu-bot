@@ -3,6 +3,10 @@
 
 An open-source AI chatbot that provides **general, evidence-based information** about **Type 1 Diabetes (T1D)** using trusted public sources such as the **ADA, JDRF, NIDDK, and CDC**.  
 It does *not* provide medical advice or personalized treatment recommendations.
+**Scope:** Educational information about T1D from trusted sources.
+**Not Provided:** Dose guidance, diagnosis, treatment changes.
+**Urgent:** If user mentions seizures/unconscious/DKA → advise emergency services.
+
 
 ---
 
