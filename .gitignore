@@ -2,6 +2,21 @@
 __pycache__/
 *.py[codz]
 *$py.class
+*.pyc
+.venv/
+
+# Ignore local databases and indexes
+*.db
+*.sqlite3
+data/index/
+data/processed/
+
+# VS Code settings
+.vscode/
+
+# OS junk files
+.DS_Store
+Thumbs.db
 
 # C extensions
 *.so
