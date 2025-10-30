@@ -4,8 +4,10 @@ import uuid
 from pathlib import Path
 import json
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 DB_PATH = Path(__file__).resolve().parent.parent / "t1d.db"
+EMB_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 def uid() -> str:
     return str(uuid.uuid4())
@@ -25,7 +27,11 @@ def main():
     conn = None
     
     try:
+        print(f"Loading embedder: {EMB_NAME}")
+        model = SentenceTransformer(EMB_NAME)
+
         conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
         cur = conn.cursor()
         print("Connected to SQLite and enabled foreign keys")
@@ -55,7 +61,7 @@ def main():
         # In the real pipeline, you'd compute embeddings with sentence-transformers and likely larger dims (e.g, 384).
         for i, text in enumerate(chunks):
             chunk_id = uid()
-            vec = np.random.rand(8)
+            vec = model.encode([text], convert_to_numpy=True)[0].astype("float32")
             vec = vec / np.linalg.norm(vec)
             cur.execute("""
                 INSERT INTO doc_chunks (id, document_id, chunk_index, content, embedding)
