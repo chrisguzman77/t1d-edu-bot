@@ -1,9 +1,13 @@
 # backend/scripts/ingest.py
 
 import argparse, os, glob, json
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-import faiss
+try:
+    import faiss
+    HAVE_FAISS = True
+except Exception:
+    HAVE_FAISS = False
 import numpy as np
 
 def read_docs(input_dir):
@@ -39,11 +43,15 @@ def main(args):
         for m, t in zip(meta, all_chunks):
             w.write(json.dumps({"meta": m, "text": t}) + "\n")
 
-    # build FAISS (inner product works wwith normalized vectors)
-    index = faiss.IndexFlatIP(vecs.shape[1])
-    index.add(vecs.astype("float32"))
-    faiss.write_index(index, os.path.join(args.index, "faiss.index"))
-    print(f"Ingested {len(all_chunks)} chunks.")
+    # build FAISS (inner product works with normalized vectors)
+    if HAVE_FAISS:
+        index = faiss.IndexFlatIP(vecs.shape[1])
+        index.add(vecs.astype("float32"))
+        faiss.write_index(index, os.path.join(args.index, "faiss.index"))
+        print(f"Ingested {len(all_chunks)} chunks.")
+        print(f"Saved FAISS index to {args.index}")
+    else:
+        print("FAISS not available; skipping FAISS index build. (Embeddings still saved.)")
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

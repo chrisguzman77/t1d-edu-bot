@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from app.rag.repository import nearest_chunks_by_cosine, log_query
+from app.llm.compose import compose_answer
 
 router = APIRouter()
 EMB = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -34,13 +35,9 @@ def ask(payload: Ask):
     qvec = EMB.encode([q], convert_to_numpy=True)[0]
     hits = nearest_chunks_by_cosine(qvec, k=4)
 
-    # Compose a simple sitched answer with tiny citations
-    lines, ids = [], []
-    for i, (score, row) in enumerate(hits, start=1):
-        src = row["document_id"]
-        lines.append(f"[[{i}]] {row['content'][:300]}…")
-        ids.append(row["id"])
-    body = "\n\n".join(lines) if lines else "I couldn't find anything relevant yet."
+    # Build the LLM response
+    snippets = [row["content"] for _, row in hits]
+    body = compose_answer(q, snippets)
 
-    log_query(q, "stitcher-edu", 25, False, ids)
-    return {"answer": f"{DISCLAIMER}\n\nQ: {q}\n\n{body}", "citations": ids}
+    log_query(q, "llm-edu", 50, False, [r["id"] for _, r in hits])
+    return {"answer": f"{DISCLAIMER}\n\n{body}", "citations": [r["id"] for _, r in hits]}
